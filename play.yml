@@ -1,0 +1,28 @@
+---
+  
+
+    - 
+      name: Start server
+      hosts: servernode
+      vars_prompt:
+        - name: "mysql_password"
+          prompt: "what is the password"
+        - name: "username"
+          prompt: "What is the git username"
+        - name: "gitpassword"
+          prompt: "What is git password"    
+      roles:
+        - server
+
+    -
+      name: Selenium Test
+      hosts: testnode
+      #ignore_errors: yes
+      roles:
+        - testrole
+   
+
+
+
+
+

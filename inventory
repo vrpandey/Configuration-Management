@@ -1,0 +1,4 @@
+[servernode]
+192.168.33.130 ansible_ssh_user=vagrant ansible_ssh_private_key_file=./keys/coffee.key
+[testnode]
+192.168.33.140 ansible_ssh_user=vagrant ansible_ssh_private_key_file=./keys/selenium.key

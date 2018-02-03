@@ -1,0 +1,114 @@
+
+    #Install mysql 5.7
+
+    - name: Add PGP key
+      become: yes
+      apt_key:
+        keyserver: pgp.mit.edu
+        id: 5072E1F5
+        
+
+    - name: Add MySQL repository
+      apt_repository: 
+        repo: deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.7
+      become: yes      
+
+
+    - name: Set root Password
+      debconf:
+        name: mysql-community-server
+        question: 'mysql-community-server/root-pass'
+        value: '{{ mysql_password }}' 
+        vtype: password
+      become: yes  
+
+    - name: Set root Password Again
+      debconf:
+        name: mysql-community-server
+        question: 'mysql-community-server/re-root-pass'
+        value: '{{ mysql_password }}'
+        vtype: password
+      become: yes  
+
+    - name: Install MySQL 5.7
+      apt:
+        pkg: '{{ item }}'
+        state: present
+        update_cache: true
+      with_items:
+        - mysql-server
+      become: yes  
+
+    - name: Start MySQL
+      service:
+        name: mysql
+        state: started
+      become: yes     
+
+    #install Java
+    
+    - name: Add Oracle Java Repository
+      apt_repository: repo='ppa:webupd8team/java'
+      become: yes
+
+    - name: Accept Java 8 License
+      debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+      become: yes
+
+    - name: Install Oracle Java 8
+      apt: name={{item}} state=latest
+      with_items:
+        - oracle-java8-installer
+        - ca-certificates
+        - oracle-java8-set-default
+      become: yes    
+
+    #install Git and Maven    
+
+    - name: Install Maven and Git
+      apt: name={{item}} state=latest
+      with_items:
+        - maven
+        - git 
+      become: yes  
+
+    #Clone git repo
+
+    - name: Clone repo
+      git:
+        repo: "https://{{ username | urlencode }}:{{ gitpassword | urlencode }}@github.ncsu.edu/engr-csc326-staff/Onboarding.git"
+        clone: yes
+        dest: /home/vagrant/coffee
+        force: yes
+      become: yes   
+
+    #Rename hibernate file
+    - name: Rename file
+      command: mv /home/vagrant/coffee/CoffeeMaker/src/main/resources/hibernate-template.cfg.xml /home/vagrant/coffee/CoffeeMaker/src/main/resources/hibernate.cfg.xml 
+      become: yes  
+
+    #Update Password
+    - name: Update Password
+      lineinfile: 
+        path: /home/vagrant/coffee/CoffeeMaker/src/main/resources/hibernate.cfg.xml
+        regexp: '<property name="hibernate.connection.password"></property>'  
+        line: '<property name="hibernate.connection.password">{{ mysql_password }}</property>' 
+      become: yes  
+
+    #Restart mysql 
+
+    - name: restart
+      service:
+        name: mysql
+        state: restarted
+      become: yes    
+   
+
+    #Start Coffeeserver
+    - name: Start sever
+      shell: nohup mvn spring-boot:run & 
+      args:
+        chdir: /home/vagrant/coffee/CoffeeMaker   
+      become: yes   
+
+

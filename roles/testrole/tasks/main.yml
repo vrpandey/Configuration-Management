@@ -1,0 +1,79 @@
+    #Install Java8
+
+    - name: Add Oracle Java Repository
+      apt_repository: repo='ppa:webupd8team/java'
+      become: yes
+
+    - name: Accept Java 8 License
+      debconf: name='oracle-java8-installer' question='shared/accepted-oracle-license-v1-1' value='true' vtype='select'
+      become: yes
+
+    - name: Install Oracle Java 8
+      apt: name={{item}} state=latest
+      with_items:
+        - oracle-java8-installer
+        - ca-certificates
+        - oracle-java8-set-default
+      become: yes  
+    
+    #pause for server to start
+
+    - pause:
+        minutes: 2    
+
+    #install google chrome drive
+    - name: install google chrome drive
+      apt: deb=https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+      become: yes  
+
+    #install maven
+
+    - name: add repo mvn
+      apt_repository: 
+        repo: ppa:andrei-pozolotin/maven3
+      become: yes   
+    
+    - name: install maven3
+      shell: apt-get update && apt-get install maven3 
+      become: yes       
+
+    #Clone git repo
+
+    - name: Install Maven and Git
+      apt: name=git state=latest
+      become: yes
+
+    - name: Clone repo
+      git:
+        repo: "http://github.com/CSC-326/Onboarding-Selenium.git"
+        dest: /home/vagrant/OnSe 
+        force: yes 
+      become: yes    
+
+    #Changes to WebTest.java 
+
+    - name: Change 1
+      lineinfile:
+        dest: /home/vagrant/OnSe/src/src/test/java/selenium/tests/WebTest.java 
+        regexp: 'headless'
+        line: 'options.addArguments( "headless" ); options.addArguments( "no-sandbox");'
+      become: yes  
+   
+    - name: Change 2
+      replace:
+        dest: /home/vagrant/OnSe/src/src/test/java/selenium/tests/WebTest.java 
+        regexp: 'localhost'
+        replace: '192.168.33.130'
+      become: yes  
+
+    # Run Test
+
+    - name: Run Test 1
+      shell: mvn test 
+      args:  
+        chdir: /home/vagrant/OnSe/src 
+      become: yes  
+
+    # - name: Run Test 2
+    #   shell: cd /home/vagrant/OnSe/src && mvn test
+    #   become: yes   
