@@ -12,14 +12,14 @@
         - name: "gitpassword"
           prompt: "What is git password"    
       roles:
-        - server
+        - coffeeRole
 
     -
       name: Selenium Test
       hosts: testnode
       #ignore_errors: yes
       roles:
-        - testrole
+        - seleniumRole
    
 
 
